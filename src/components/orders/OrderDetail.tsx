@@ -1,5 +1,6 @@
 import { Order } from "@/data/types";
 import { StatusBadge, ChannelBadge } from "./OrderBadges";
+import { DeliveryRiskBadge } from "./DeliveryRiskBadge";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -9,7 +10,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Phone, Mail, Package, Truck } from "lucide-react";
+import { MapPin, Phone, Mail, Package, Truck, Timer } from "lucide-react";
 
 interface OrderDetailProps {
   order: Order | null;
@@ -79,6 +80,40 @@ export function OrderDetail({ order, open, onClose }: OrderDetailProps) {
               <span className="font-mono font-bold text-lg">${order.total.toLocaleString("es-CL")}</span>
             </div>
           </section>
+
+          <Separator />
+
+          {/* Delivery Timing */}
+          {order.promisedDeliveryDate && (
+            <section>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                <Timer className="w-3.5 h-3.5 inline mr-1" />
+                Tiempos de Entrega
+              </h3>
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Estado de cumplimiento</span>
+                  <DeliveryRiskBadge order={order} />
+                </div>
+                {order.estimatedDays && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Días estimados</span>
+                    <span className="font-medium">{order.estimatedDays} días</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Fecha prometida</span>
+                  <span className="font-medium">{format(new Date(order.promisedDeliveryDate), "dd MMM yyyy", { locale: es })}</span>
+                </div>
+                {order.actualDeliveryDate && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Fecha real de entrega</span>
+                    <span className="font-medium">{format(new Date(order.actualDeliveryDate), "dd MMM yyyy", { locale: es })}</span>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
 
           <Separator />
 

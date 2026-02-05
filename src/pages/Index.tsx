@@ -6,7 +6,8 @@ import { OrderTable } from "@/components/orders/OrderTable";
 import { OrderFilters } from "@/components/orders/OrderFilters";
 import { OrderDetail } from "@/components/orders/OrderDetail";
 import { Order } from "@/data/types";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const {
@@ -37,6 +38,12 @@ const Index = () => {
             </h1>
           </div>
           <span className="text-xs text-muted-foreground ml-1">Multicanal</span>
+          <div className="ml-auto">
+            <Link to="/admin" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Settings className="w-4 h-4" />
+              <span>Administración</span>
+            </Link>
+          </div>
         </div>
       </header>
 

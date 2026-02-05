@@ -1,5 +1,6 @@
 import { Order } from "@/data/types";
 import { StatusBadge, ChannelBadge } from "./OrderBadges";
+import { DeliveryRiskBadge } from "./DeliveryRiskBadge";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -27,6 +28,7 @@ export function OrderTable({ orders, onSelect }: OrderTableProps) {
             <TableHead className="font-semibold text-xs uppercase tracking-wider">Canal</TableHead>
             <TableHead className="font-semibold text-xs uppercase tracking-wider">Estado</TableHead>
             <TableHead className="font-semibold text-xs uppercase tracking-wider text-right">Total</TableHead>
+            <TableHead className="font-semibold text-xs uppercase tracking-wider">Entrega</TableHead>
             <TableHead className="font-semibold text-xs uppercase tracking-wider">Fecha</TableHead>
           </TableRow>
         </TableHeader>
@@ -54,6 +56,9 @@ export function OrderTable({ orders, onSelect }: OrderTableProps) {
               </TableCell>
               <TableCell className="text-right font-mono text-sm">
                 ${order.total.toLocaleString("es-CL")}
+              </TableCell>
+              <TableCell>
+                <DeliveryRiskBadge order={order} />
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {format(new Date(order.createdAt), "dd MMM yyyy", { locale: es })}
