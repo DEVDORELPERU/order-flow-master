@@ -1,5 +1,6 @@
-import { Package, TrendingUp, Clock, AlertTriangle } from "lucide-react";
+import { Package, TrendingUp, Clock, AlertTriangle, Timer } from "lucide-react";
 import { Order } from "@/data/types";
+import { countDeliveryRisks } from "@/lib/deliveryUtils";
 
 interface KPICardsProps {
   orders: Order[];
@@ -10,6 +11,7 @@ export function KPICards({ orders }: KPICardsProps) {
   const pending = orders.filter((o) => o.status === "pending").length;
   const inTransit = orders.filter((o) => o.status === "in_transit").length;
   const incidents = orders.filter((o) => o.status === "incident" || o.status === "rejected").length;
+  const { total: delayRiskTotal, atRisk, late } = countDeliveryRisks(orders);
 
   const cards = [
     {
@@ -40,10 +42,18 @@ export function KPICards({ orders }: KPICardsProps) {
       accent: "text-destructive",
       bgAccent: "bg-red-50",
     },
+    {
+      label: "Riesgo de Retraso",
+      value: delayRiskTotal,
+      icon: Timer,
+      accent: "text-amber-600",
+      bgAccent: "bg-amber-50",
+      subtitle: `${atRisk} en riesgo · ${late} retrasados`,
+    },
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid grid-cols-5 gap-3">
       {cards.map((card, i) => (
         <div
           key={card.label}
@@ -59,6 +69,9 @@ export function KPICards({ orders }: KPICardsProps) {
             </div>
           </div>
           <div className="text-2xl font-bold tracking-tight">{card.value}</div>
+          {"subtitle" in card && card.subtitle && (
+            <div className="text-[10px] text-muted-foreground mt-1">{card.subtitle}</div>
+          )}
         </div>
       ))}
     </div>

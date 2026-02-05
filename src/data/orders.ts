@@ -121,5 +121,19 @@ export const MOCK_ORDERS: Order[] = Array.from({ length: 48 }, (_, i) => {
     tracking: status === "in_transit" || status === "delivered" ? `TRK-${String(500000 + i)}` : undefined,
     carrier: status === "in_transit" || status === "delivered" ? ["Chilexpress", "Starken", "Blue Express"][i % 3] : undefined,
     notes: i % 5 === 0 ? "Cliente solicita entrega antes de las 14:00" : undefined,
+    estimatedDays: [3, 5, 7, 2, 4, 6, 1, 8, 3, 5][i % 10],
+    promisedDeliveryDate: (() => {
+      const d = new Date(randomDate(30));
+      const est = [3, 5, 7, 2, 4, 6, 1, 8, 3, 5][i % 10];
+      d.setDate(d.getDate() + est);
+      return d.toISOString();
+    })(),
+    actualDeliveryDate: status === "delivered" ? (() => {
+      const d = new Date(randomDate(30));
+      const est = [3, 5, 7, 2, 4, 6, 1, 8, 3, 5][i % 10];
+      // Some delivered on time, some late
+      d.setDate(d.getDate() + est + (i % 3 === 0 ? 2 : -1));
+      return d.toISOString();
+    })() : undefined,
   };
 });

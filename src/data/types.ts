@@ -40,6 +40,12 @@ export interface Order {
   tracking?: string;
   carrier?: string;
   notes?: string;
+  /** SLA: promised delivery date ISO string */
+  promisedDeliveryDate?: string;
+  /** Actual delivery date ISO string (filled when delivered) */
+  actualDeliveryDate?: string;
+  /** Estimated days to deliver from creation */
+  estimatedDays?: number;
 }
 
 export interface Stage {
