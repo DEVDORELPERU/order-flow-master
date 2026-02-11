@@ -20,6 +20,7 @@ const Index = () => {
     search,
     setSearch,
     countByStatus,
+    confirmDelivery,
   } = useOrders();
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -86,6 +87,10 @@ const Index = () => {
         order={selectedOrder}
         open={!!selectedOrder}
         onClose={() => setSelectedOrder(null)}
+        onConfirmDelivery={(orderId) => {
+          confirmDelivery(orderId);
+          setSelectedOrder(null);
+        }}
       />
     </div>
   );

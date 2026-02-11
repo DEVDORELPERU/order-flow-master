@@ -10,15 +10,17 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Phone, Mail, Package, Truck, Timer } from "lucide-react";
+import { MapPin, Phone, Mail, Package, Truck, Timer, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface OrderDetailProps {
   order: Order | null;
   open: boolean;
   onClose: () => void;
+  onConfirmDelivery?: (orderId: string) => void;
 }
 
-export function OrderDetail({ order, open, onClose }: OrderDetailProps) {
+export function OrderDetail({ order, open, onClose, onConfirmDelivery }: OrderDetailProps) {
   if (!order) return null;
 
   return (
@@ -141,13 +143,27 @@ export function OrderDetail({ order, open, onClose }: OrderDetailProps) {
             </section>
           )}
 
+          {/* Confirm Delivery for Store channel */}
+          {order.channel === "store" && order.status !== "delivered" && order.status !== "closed" && (
+            <section>
+              <Button
+                className="w-full gap-2"
+                size="lg"
+                onClick={() => onConfirmDelivery?.(order.id)}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Confirmar Entrega en Tienda
+              </Button>
+            </section>
+          )}
+
           {/* Notes */}
           {order.notes && (
             <section>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                 Notas
               </h3>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
+              <div className="bg-muted/50 border border-border rounded-lg p-3 text-sm">
                 {order.notes}
               </div>
             </section>
