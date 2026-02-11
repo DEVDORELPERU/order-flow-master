@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Order, OrderStatus, Channel } from "@/data/types";
 import { MOCK_ORDERS } from "@/data/orders";
 
 export function useOrders() {
-  const [orders] = useState<Order[]>(MOCK_ORDERS);
+  const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const [channelFilter, setChannelFilter] = useState<Channel | "all">("all");
   const [search, setSearch] = useState("");
@@ -40,6 +40,16 @@ export function useOrders() {
     return map;
   }, [orders]);
 
+  const confirmDelivery = useCallback((orderId: string) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? { ...o, status: "delivered" as OrderStatus, actualDeliveryDate: new Date().toISOString() }
+          : o
+      )
+    );
+  }, []);
+
   return {
     orders: filtered,
     allOrders: orders,
@@ -51,5 +61,6 @@ export function useOrders() {
     setSearch,
     countByStatus,
     countByChannel,
+    confirmDelivery,
   };
 }
