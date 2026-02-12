@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Clock, AlertTriangle, CheckCircle } from "lucide-react";
 
 const riskConfig: Record<DeliveryRisk, { label: string; className: string; icon: typeof Clock }> = {
-  on_time: { label: "En tiempo", className: "bg-green-100 text-green-800 border-green-200", icon: CheckCircle },
+  on_time: { label: "A tiempo", className: "bg-green-100 text-green-800 border-green-200", icon: CheckCircle },
   at_risk: { label: "En riesgo", className: "bg-amber-100 text-amber-800 border-amber-200", icon: Clock },
   late: { label: "Retrasado", className: "bg-red-100 text-red-800 border-red-200", icon: AlertTriangle },
 };

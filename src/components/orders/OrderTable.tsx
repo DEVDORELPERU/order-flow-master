@@ -28,7 +28,7 @@ export function OrderTable({ orders, onSelect }: OrderTableProps) {
             <TableHead className="font-semibold text-xs uppercase tracking-wider">Canal</TableHead>
             <TableHead className="font-semibold text-xs uppercase tracking-wider">Estado</TableHead>
             <TableHead className="font-semibold text-xs uppercase tracking-wider text-right">Total</TableHead>
-            <TableHead className="font-semibold text-xs uppercase tracking-wider">Entrega</TableHead>
+            <TableHead className="font-semibold text-xs uppercase tracking-wider">Cumplimiento</TableHead>
             <TableHead className="font-semibold text-xs uppercase tracking-wider">Fecha</TableHead>
           </TableRow>
         </TableHeader>
