@@ -1,23 +1,11 @@
 /**
- * Simulación de conexión a base de datos SQL
+ * Conexión real a SQL Server
  * Tabla: Ordenes
- * 
- * Simula queries SQL asíncronos contra una tabla "Ordenes"
- * con latencia artificial para emular una conexión real.
  */
 
 import { Order, OrderStatus, Channel } from "@/data/types";
-import { MOCK_ORDERS } from "@/data/orders";
-
-// Simula la tabla "Ordenes" en memoria (como si fuera PostgreSQL)
-let tablaOrdenes: Order[] = [...MOCK_ORDERS];
-
-/** Latencia simulada de red/DB en ms */
-const DB_LATENCY = 400;
-
-function simulateLatency(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, DB_LATENCY));
-}
+import { getConnection } from "./db";
+import sql from "mssql";
 
 export interface QueryFilters {
   status?: OrderStatus | "all";
@@ -30,62 +18,87 @@ export interface QueryFilters {
 export interface QueryResult {
   data: Order[];
   total: number;
-  query: string; // SQL simulado para debug
+  query: string;
 }
 
 /**
  * SELECT * FROM Ordenes WHERE ...
- * Simula una consulta SQL con filtros, paginación y búsqueda.
+ * Consulta real con filtros y paginación (SQL Server)
  */
-export async function selectOrdenes(filters: QueryFilters = {}): Promise<QueryResult> {
-  await simulateLatency();
+export async function selectOrdenes(
+  filters: QueryFilters = {}
+): Promise<QueryResult> {
+  const {
+    status = "all",
+    channel = "all",
+    search = "",
+    limit = 50,
+    offset = 0,
+  } = filters;
 
-  const { status = "all", channel = "all", search = "", limit = 50, offset = 0 } = filters;
+  const pool = await getConnection();
+  const request = pool.request();
 
-  // Construir SQL simulado para logging
-  const whereClauses: string[] = [];
-  if (status !== "all") whereClauses.push(`status = '${status}'`);
-  if (channel !== "all") whereClauses.push(`channel = '${channel}'`);
-  if (search) whereClauses.push(`(id ILIKE '%${search}%' OR customer_name ILIKE '%${search}%' OR customer_email ILIKE '%${search}%')`);
+  let whereClauses: string[] = [];
 
-  const whereSQL = whereClauses.length > 0 ? ` WHERE ${whereClauses.join(" AND ")}` : "";
-  const query = `SELECT * FROM Ordenes${whereSQL} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+  if (status !== "all") {
+    whereClauses.push("status = @status");
+    request.input("status", sql.VarChar, status);
+  }
 
-  // Ejecutar filtrado en memoria (simula el motor SQL)
-  let results = tablaOrdenes.filter((o) => {
-    if (status !== "all" && o.status !== status) return false;
-    if (channel !== "all" && o.channel !== channel) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return (
-        o.id.toLowerCase().includes(q) ||
-        o.customer.name.toLowerCase().includes(q) ||
-        o.customer.email.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
+  if (channel !== "all") {
+    whereClauses.push("channel = @channel");
+    request.input("channel", sql.VarChar, channel);
+  }
 
-  const total = results.length;
-  results = results.slice(offset, offset + limit);
+  if (search) {
+    whereClauses.push(
+      "(id LIKE @search OR customer_name LIKE @search OR customer_email LIKE @search)"
+    );
+    request.input("search", sql.VarChar, `%${search}%`);
+  }
 
-  console.log(`[DB] ${query} → ${total} registros`);
+  const whereSQL =
+    whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
-  return { data: results, total, query };
+  const query = `
+    SELECT *
+    FROM Ordenes
+    ${whereSQL}
+    ORDER BY created_at DESC
+    OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
+  `;
+
+  request.input("offset", sql.Int, offset);
+  request.input("limit", sql.Int, limit);
+
+  const result = await request.query(query);
+
+  return {
+    data: result.recordset as Order[],
+    total: result.recordset.length,
+    query,
+  };
 }
 
 /**
  * SELECT COUNT(*) FROM Ordenes GROUP BY status
  */
 export async function countByStatusQuery(): Promise<Record<string, number>> {
-  await simulateLatency();
+  const pool = await getConnection();
+
+  const result = await pool.request().query(`
+    SELECT status, COUNT(*) as total
+    FROM Ordenes
+    GROUP BY status
+  `);
 
   const map: Record<string, number> = {};
-  tablaOrdenes.forEach((o) => {
-    map[o.status] = (map[o.status] || 0) + 1;
+
+  result.recordset.forEach((row: any) => {
+    map[row.status] = row.total;
   });
 
-  console.log("[DB] SELECT status, COUNT(*) FROM Ordenes GROUP BY status");
   return map;
 }
 
@@ -93,43 +106,55 @@ export async function countByStatusQuery(): Promise<Record<string, number>> {
  * SELECT COUNT(*) FROM Ordenes GROUP BY channel
  */
 export async function countByChannelQuery(): Promise<Record<string, number>> {
-  await simulateLatency();
+  const pool = await getConnection();
+
+  const result = await pool.request().query(`
+    SELECT channel, COUNT(*) as total
+    FROM Ordenes
+    GROUP BY channel
+  `);
 
   const map: Record<string, number> = {};
-  tablaOrdenes.forEach((o) => {
-    map[o.channel] = (map[o.channel] || 0) + 1;
+
+  result.recordset.forEach((row: any) => {
+    map[row.channel] = row.total;
   });
 
-  console.log("[DB] SELECT channel, COUNT(*) FROM Ordenes GROUP BY channel");
   return map;
 }
 
 /**
- * UPDATE Ordenes SET status = 'delivered', actual_delivery_date = NOW() WHERE id = ?
+ * UPDATE Ordenes SET status = 'delivered'
  */
-export async function updateDeliveryStatus(orderId: string): Promise<Order | null> {
-  await simulateLatency();
+export async function updateDeliveryStatus(
+  orderId: string
+): Promise<Order | null> {
+  const pool = await getConnection();
 
-  const query = `UPDATE Ordenes SET status = 'delivered', actual_delivery_date = NOW() WHERE id = '${orderId}'`;
-  console.log(`[DB] ${query}`);
+  const result = await pool
+    .request()
+    .input("orderId", sql.VarChar, orderId)
+    .query(`
+      UPDATE Ordenes
+      SET status = 'delivered',
+          actual_delivery_date = GETDATE()
+      OUTPUT inserted.*
+      WHERE id = @orderId
+    `);
 
-  let updated: Order | null = null;
-  tablaOrdenes = tablaOrdenes.map((o) => {
-    if (o.id === orderId) {
-      updated = { ...o, status: "delivered" as OrderStatus, actualDeliveryDate: new Date().toISOString() };
-      return updated;
-    }
-    return o;
-  });
-
-  return updated;
+  return result.recordset[0] || null;
 }
 
 /**
- * SELECT * FROM Ordenes (sin filtros, para KPIs)
+ * SELECT * FROM Ordenes (sin filtros)
  */
 export async function selectAllOrdenes(): Promise<Order[]> {
-  await simulateLatency();
-  console.log("[DB] SELECT * FROM Ordenes");
-  return [...tablaOrdenes];
+  const pool = await getConnection();
+
+  const result = await pool.request().query(`
+    SELECT *
+    FROM Ordenes
+  `);
+
+  return result.recordset as Order[];
 }
