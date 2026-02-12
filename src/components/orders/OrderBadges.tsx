@@ -46,10 +46,10 @@ const channelStyles: Record<Channel, string> = {
 };
 
 const channelLabels: Record<Channel, string> = {
-  ecommerce: "Comercio Electrónico",
+  ecommerce: "E-Commerce",
   marketplace: "Marketplace",
-  store: "Tienda",
-  call_center: "Centro de Llamadas",
+  store: "Tienda Física",
+  call_center: "Call Center",
 };
 
 const channelIcons: Record<Channel, string> = {
