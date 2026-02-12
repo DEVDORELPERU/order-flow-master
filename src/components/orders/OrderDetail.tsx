@@ -34,7 +34,7 @@ export function OrderDetail({ order, open, onClose, onConfirmDelivery }: OrderDe
           <div className="flex items-center gap-2 mt-1">
             <ChannelBadge channel={order.channel} />
             <span className="text-xs text-muted-foreground">
-              Master ID: {order.masterId}
+              ID Maestro: {order.masterId}
             </span>
           </div>
         </SheetHeader>
@@ -71,7 +71,7 @@ export function OrderDetail({ order, open, onClose, onConfirmDelivery }: OrderDe
                 <div key={i} className="flex items-center justify-between bg-muted/30 rounded-lg p-3">
                   <div>
                     <div className="text-sm font-medium">{p.name}</div>
-                    <div className="text-xs text-muted-foreground font-mono">{p.sku} · Qty: {p.quantity}</div>
+                    <div className="text-xs text-muted-foreground font-mono">{p.sku} · Cant: {p.quantity}</div>
                   </div>
                   <span className="font-mono text-sm">${p.price.toLocaleString("es-CL")}</span>
                 </div>
@@ -135,7 +135,7 @@ export function OrderDetail({ order, open, onClose, onConfirmDelivery }: OrderDe
                 )}
                 {order.tracking && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tracking</span>
+                    <span className="text-muted-foreground">Seguimiento</span>
                     <span className="font-mono font-medium">{order.tracking}</span>
                   </div>
                 )}

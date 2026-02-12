@@ -1,5 +1,7 @@
-import { STAGES } from "@/data/orders";
+import { STAGES, STATUS_LABELS } from "@/data/orders";
 import { cn } from "@/lib/utils";
+
+const statusLabels: Record<string, string> = STATUS_LABELS;
 
 interface PipelineProps {
   countByStatus: Record<string, number>;
@@ -43,8 +45,8 @@ export function PipelineView({ countByStatus }: PipelineProps) {
                 <div key={s} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1.5">
                     <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse-dot", colors.dot)} />
-                    <span className="text-muted-foreground capitalize">
-                      {s.replace(/_/g, " ")}
+                    <span className="text-muted-foreground">
+                      {statusLabels[s] || s.replace(/_/g, " ")}
                     </span>
                   </div>
                   <span className={cn("font-medium", colors.text)}>{countByStatus[s] || 0}</span>
