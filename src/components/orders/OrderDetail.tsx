@@ -12,6 +12,17 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { MapPin, Phone, Mail, Package, Truck, Timer, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface OrderDetailProps {
   order: Order | null;
@@ -146,14 +157,28 @@ export function OrderDetail({ order, open, onClose, onConfirmDelivery }: OrderDe
           {/* Confirm Delivery for Store channel */}
           {order.channel === "store" && order.status !== "delivered" && order.status !== "closed" && (
             <section>
-              <Button
-                className="w-full gap-2"
-                size="lg"
-                onClick={() => onConfirmDelivery?.(order.id)}
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                Confirmar Entrega en Tienda
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button className="w-full gap-2" size="lg">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Confirmar Entrega en Tienda
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>¿Confirmar entrega?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      ¿Estás seguro de que deseas confirmar la entrega del pedido <span className="font-mono font-semibold">{order.id}</span>? Esta acción no se puede deshacer.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onConfirmDelivery?.(order.id)}>
+                      Confirmar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </section>
           )}
 
