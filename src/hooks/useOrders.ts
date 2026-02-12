@@ -1,58 +1,65 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Order, OrderStatus, Channel } from "@/data/types";
-import { MOCK_ORDERS } from "@/data/orders";
+import {
+  selectOrdenes,
+  selectAllOrdenes,
+  countByStatusQuery,
+  countByChannelQuery,
+  updateDeliveryStatus,
+  QueryFilters,
+} from "@/lib/database";
 
 export function useOrders() {
-  const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const [countByStatus, setCountByStatus] = useState<Record<string, number>>({});
+  const [countByChannel, setCountByChannel] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const [channelFilter, setChannelFilter] = useState<Channel | "all">("all");
   const [search, setSearch] = useState("");
 
-  const filtered = useMemo(() => {
-    return orders.filter((o) => {
-      if (statusFilter !== "all" && o.status !== statusFilter) return false;
-      if (channelFilter !== "all" && o.channel !== channelFilter) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        return (
-          o.id.toLowerCase().includes(q) ||
-          o.customer.name.toLowerCase().includes(q) ||
-          o.customer.email.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [orders, statusFilter, channelFilter, search]);
+  // Cargar datos desde la "base de datos"
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
+    try {
+      const filters: QueryFilters = {
+        status: statusFilter,
+        channel: channelFilter,
+        search,
+      };
 
-  const countByStatus = useMemo(() => {
-    const map: Record<string, number> = {};
-    orders.forEach((o) => {
-      map[o.status] = (map[o.status] || 0) + 1;
-    });
-    return map;
-  }, [orders]);
+      const [result, all, statusCounts, channelCounts] = await Promise.all([
+        selectOrdenes(filters),
+        selectAllOrdenes(),
+        countByStatusQuery(),
+        countByChannelQuery(),
+      ]);
 
-  const countByChannel = useMemo(() => {
-    const map: Record<string, number> = {};
-    orders.forEach((o) => {
-      map[o.channel] = (map[o.channel] || 0) + 1;
-    });
-    return map;
-  }, [orders]);
+      setOrders(result.data);
+      setAllOrders(all);
+      setCountByStatus(statusCounts);
+      setCountByChannel(channelCounts);
+    } catch (error) {
+      console.error("[DB Error]", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, channelFilter, search]);
 
-  const confirmDelivery = useCallback((orderId: string) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === orderId
-          ? { ...o, status: "delivered" as OrderStatus, actualDeliveryDate: new Date().toISOString() }
-          : o
-      )
-    );
-  }, []);
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  const confirmDelivery = useCallback(async (orderId: string) => {
+    await updateDeliveryStatus(orderId);
+    await fetchOrders();
+  }, [fetchOrders]);
 
   return {
-    orders: filtered,
-    allOrders: orders,
+    orders,
+    allOrders,
     statusFilter,
     setStatusFilter,
     channelFilter,
@@ -62,5 +69,6 @@ export function useOrders() {
     countByStatus,
     countByChannel,
     confirmDelivery,
+    loading,
   };
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useOrders } from "@/hooks/useOrders";
+import { Skeleton } from "@/components/ui/skeleton";
 import { KPICards } from "@/components/orders/KPICards";
 import { PipelineView } from "@/components/orders/PipelineView";
 import { OrderTable } from "@/components/orders/OrderTable";
@@ -21,6 +22,7 @@ const Index = () => {
     setSearch,
     countByStatus,
     confirmDelivery,
+    loading,
   } = useOrders();
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -77,7 +79,15 @@ const Index = () => {
             onChannelChange={setChannelFilter}
           />
           <div className="mt-4">
-            <OrderTable orders={orders} onSelect={setSelectedOrder} />
+            {loading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-14 w-full rounded-lg" />
+                ))}
+              </div>
+            ) : (
+              <OrderTable orders={orders} onSelect={setSelectedOrder} />
+            )}
           </div>
         </section>
       </main>
